@@ -1,93 +1,90 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useWindowSize } from "./useWindowSize";
 
-function drawGridLines(cnv: any, lineOptions: any) {
-  console.log("canvas", cnv);
-  var iWidth = cnv.width;
-  var iHeight = cnv.height;
+function draw(
+  canvas: any,
+  colCount: number,
+  rowCount: number,
+  oldVersion: boolean
+) {
+  let iWidth = canvas.clientWidth;
+  let iHeight = canvas.clientHeight;
 
-  var ctx = cnv.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
   ctx.translate(0.5, 0.5);
-  ctx.strokeStyle = lineOptions.color;
+  ctx.strokeStyle = "#D3D3D3";
   ctx.strokeWidth = 1;
 
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   ctx.beginPath();
 
-  var iCount = null;
-  var i = null;
-  var x = null;
-  var y = null;
+  let i = 1;
+  let x = null;
+  let y = null;
 
-  iCount = Math.floor(iWidth / lineOptions.separation);
+  if (oldVersion) {
+    const colWidth = Math.floor(iWidth / colCount);
 
-  for (i = 1; i <= iCount; i++) {
-    x = i * lineOptions.separation;
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, iHeight);
-    ctx.stroke();
+    for (i = 1; i <= colCount; i++) {
+      x = i * colWidth;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, iHeight);
+      ctx.stroke();
+    }
+
+    const rowHeight = Math.floor(iHeight / rowCount);
+
+    for (i = 1; i <= rowCount; i++) {
+      y = i * rowHeight;
+      ctx.moveTo(0, y);
+      ctx.lineTo(iWidth, y);
+      ctx.stroke();
+    }
+  } else {
+    const colWidth = Math.floor(iWidth / colCount);
+
+    for (i = 1; i <= colWidth; i++) {
+      x = i * colCount;
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, iHeight);
+      ctx.stroke();
+    }
+
+    const rowHeight = Math.floor(iHeight / rowCount);
+
+    for (i = 1; i <= rowHeight; i++) {
+      y = i * rowCount;
+      ctx.moveTo(0, y);
+      ctx.lineTo(iWidth, y);
+      ctx.stroke();
+    }
   }
-
-  iCount = Math.floor(iHeight / lineOptions.separation);
-
-  for (i = 1; i <= iCount; i++) {
-    y = i * lineOptions.separation;
-    ctx.moveTo(0, y);
-    ctx.lineTo(iWidth, y);
-    ctx.stroke();
-  }
-
   ctx.closePath();
 
   return;
 }
-// Hook
-function useWindowSize() {
-  // Initialize state with undefined width/height so server and client renders match
-  // Learn more here: https://joshwcomeau.com/react/the-perils-of-rehydration/
-  const [windowSize, setWindowSize] = useState({
-    width: 0,
-    height: 0,
-  });
 
-  useEffect(() => {
-    // Handler to call on window resize
-    function handleResize() {
-      // Set window width/height to state
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    }
-
-    // Add event listener
-    window.addEventListener("resize", handleResize);
-
-    // Call handler right away so state gets updated with initial window size
-    handleResize();
-
-    // Remove event listener on cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []); // Empty array ensures that effect is only run on mount
-
-  return windowSize;
+export interface IGridWrapperProps {
+  columnCount: number;
+  rowCount: number;
+  oldVersion: boolean;
+  gridWidth?: number;
+  gridHeight?: number;
 }
 
-export function GridWrapper() {
+export function GridWrapper(props: IGridWrapperProps) {
+  const { gridWidth, gridHeight, columnCount, rowCount, oldVersion } = props;
   const size = useWindowSize();
-  const ref = useRef(null);
+  const canvasWidth = gridWidth || size.width;
+  const canvasHeight = gridHeight || size.height;
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    let canvas = ref.current;
+    draw(canvasRef.current, columnCount, rowCount, oldVersion);
+  }, [columnCount, rowCount, size, oldVersion, gridWidth, gridHeight]);
 
-    const gridOptions = {
-      majorLines: {
-        separation: 20,
-        color: "#D3D3D3",
-      },
-    };
-
-    drawGridLines(canvas, gridOptions.majorLines);
-  });
-
-  return <canvas ref={ref} width={size.width} height={size.height}></canvas>;
+  return (
+    <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight}></canvas>
+  );
 }
