@@ -9,7 +9,7 @@ function App() {
         columnCount={50}
         rowCount={50}
         oldVersion={true}
-        isInDesign={false}
+        isInDesign={true}
       />
     </div>
   );
