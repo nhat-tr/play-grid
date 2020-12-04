@@ -16,9 +16,10 @@ const Template: Story<IGridWrapperProps> = (args) => <GridWrapper {...args} />;
 
 export const Default = Template.bind({});
 Default.args = {
+  isInDesign: true,
   columnCount: 50,
   rowCount: 50,
-  oldVersion: false,
-  gridWidth: 300,
-  gridHeight: 300,
+  oldVersion: true,
+  gridWidth: 900,
+  gridHeight: 600,
 };

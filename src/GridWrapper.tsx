@@ -1,21 +1,22 @@
-import { useEffect, useRef } from "react";
+import { CSSProperties, useEffect, useRef } from "react";
+import GridLayout from "react-grid-layout";
+import "./gridLayoutStyle.css";
 import { useWindowSize } from "./useWindowSize";
 
 function draw(
   canvas: any,
   colCount: number,
   rowCount: number,
-  oldVersion: boolean
+  oldVersion: boolean,
+  isInDesign: boolean
 ) {
   let iWidth = canvas.clientWidth;
   let iHeight = canvas.clientHeight;
 
   const ctx = canvas.getContext("2d");
 
-  ctx.translate(0.5, 0.5);
   ctx.strokeStyle = "#D3D3D3";
   ctx.strokeWidth = 1;
-
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   ctx.beginPath();
 
@@ -69,22 +70,80 @@ export interface IGridWrapperProps {
   columnCount: number;
   rowCount: number;
   oldVersion: boolean;
+  isInDesign: boolean;
   gridWidth?: number;
   gridHeight?: number;
 }
 
 export function GridWrapper(props: IGridWrapperProps) {
-  const { gridWidth, gridHeight, columnCount, rowCount, oldVersion } = props;
-  const size = useWindowSize();
-  const canvasWidth = gridWidth || size.width;
-  const canvasHeight = gridHeight || size.height;
+  const {
+    gridWidth,
+    gridHeight,
+    columnCount,
+    rowCount,
+    oldVersion,
+    isInDesign,
+  } = props;
+  const windowSize = useWindowSize();
+  const availableWidth = gridWidth || windowSize.width || 1;
+  const width = Math.ceil(availableWidth / columnCount) * columnCount;
+  const availableHeight = gridHeight || windowSize.height || 1;
+  const height = Math.ceil(availableHeight / rowCount) * rowCount;
+
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    draw(canvasRef.current, columnCount, rowCount, oldVersion);
-  }, [columnCount, rowCount, size, oldVersion, gridWidth, gridHeight]);
+    draw(canvasRef.current, columnCount, rowCount, oldVersion, isInDesign);
+  }, [
+    columnCount,
+    rowCount,
+    windowSize,
+    oldVersion,
+    gridWidth,
+    gridHeight,
+    isInDesign,
+  ]);
+  const items = [];
+
+  const itemStyle: CSSProperties = {
+    background: "#2ECC71",
+  };
+  for (let i = 0; i < columnCount; i += 5) {
+    items.push(
+      <div
+        style={itemStyle}
+        key={`item-${i}`}
+        data-grid={{ x: i, y: 0, w: 5, h: 5 }}
+      >
+        {i}
+      </div>
+    );
+  }
 
   return (
-    <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight}></canvas>
+    <>
+      <GridLayout
+        className="layout"
+        margin={[0, 0]}
+        cols={columnCount}
+        width={width}
+        rowHeight={height / rowCount}
+        compactType={null}
+        useCSSTransforms={true}
+        isBounded={true}
+        style={{ width, height }}
+        isDraggable={isInDesign}
+        isResizable={isInDesign}
+        isDroppable={isInDesign}
+      >
+        {items}
+      </GridLayout>{" "}
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{ zIndex: -1, position: "absolute", top: 0, left: 0 }}
+      />
+    </>
   );
 }
