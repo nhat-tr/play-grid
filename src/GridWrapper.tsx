@@ -7,8 +7,7 @@ function draw(
   canvas: any,
   colCount: number,
   rowCount: number,
-  oldVersion: boolean,
-  isInDesign: boolean
+  oldVersion: boolean
 ) {
   let iWidth = canvas.clientWidth;
   let iHeight = canvas.clientHeight;
@@ -93,7 +92,7 @@ export function GridWrapper(props: IGridWrapperProps) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    draw(canvasRef.current, columnCount, rowCount, oldVersion, isInDesign);
+    if (isInDesign) draw(canvasRef.current, columnCount, rowCount, oldVersion);
   }, [
     columnCount,
     rowCount,
@@ -138,12 +137,14 @@ export function GridWrapper(props: IGridWrapperProps) {
       >
         {items}
       </GridLayout>{" "}
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        style={{ zIndex: -1, position: "absolute", top: 0, left: 0 }}
-      />
+      {isInDesign && (
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          style={{ zIndex: -1, position: "absolute", top: 0, left: 0 }}
+        />
+      )}
     </>
   );
 }
